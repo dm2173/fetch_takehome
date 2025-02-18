@@ -80,12 +80,13 @@ FROM receipts
 
 ### When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
 ```sql
+SLECT 
 SUM( CASE 
-when rewardsReceiptStatus = “Accepted” THEN purchasedItemCount 
+WHEN rewardsReceiptStatus = “Accepted” THEN purchasedItemCount 
 ELSE NULL 
 END) AS items_accepted,
 SUM( CASE 
-when rewardsReceiptStatus = “Rejected” THEN purchasedItemCount 
+WHEN rewardsReceiptStatus = “Rejected” THEN purchasedItemCount 
 ELSE NULL 
 END) AS items_rejected
 FROM receipts
