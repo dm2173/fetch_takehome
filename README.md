@@ -50,7 +50,8 @@ prior_month AS (
     ON b.barcode = ri.barcode
     LEFT JOIN receipts r 
     ON ri.receiptID = r.receiptID 
-    WHERE r.dateScanned BETWEEN ADD_MONTHS(CURRENT_DATE(), -2) AND ADD_MONTHS(CURRENT_DATE(), -1)
+    WHERE r.dateScanned BETWEEN ADD_MONTHS(CURRENT_DATE(), -2) 
+    AND ADD_MONTHS(CURRENT_DATE(), -1)
     GROUP BY b.name
 )
 SELECT a.name, 
