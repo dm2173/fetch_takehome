@@ -54,7 +54,8 @@ prior_month AS (
     AND ADD_MONTHS(CURRENT_DATE(), -1)
     GROUP BY b.name
 )
-SELECT a.name, 
+SELECT 
+a.name, 
 dense_rank() OVER (ORDER BY a.cnt DESC) AS current_ranking,
 dense_rank() OVER (ORDER BY b.cnt DESC) AS prior_ranking,
 FROM most_recent_transactions_agg a
@@ -68,46 +69,46 @@ LIMIT 5
 ```sql
 Select 
 AVG( CASE 
-WHEN rewardsReceiptStatus = “Accepted” THEN totalSpent 
-ELSE NULL 
+  WHEN rewardsReceiptStatus = “Accepted” THEN totalSpent 
+  ELSE NULL 
 END) AS avg_accepted,
 AVG( CASE 
-when rewardsReceiptStatus = “Rejected” THEN totalSpent 
-ELSE NULL 
+  WHEN rewardsReceiptStatus = “Rejected” THEN totalSpent 
+  ELSE NULL 
 END) AS avg_rejected
 FROM receipts
 ```
 
 ### When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
 ```sql
-SLECT 
+SELECT 
 SUM( CASE 
-WHEN rewardsReceiptStatus = “Accepted” THEN purchasedItemCount 
-ELSE NULL 
+  WHEN rewardsReceiptStatus = “Accepted” THEN purchasedItemCount 
+  ELSE NULL 
 END) AS items_accepted,
 SUM( CASE 
-WHEN rewardsReceiptStatus = “Rejected” THEN purchasedItemCount 
-ELSE NULL 
+  WHEN rewardsReceiptStatus = “Rejected” THEN purchasedItemCount 
+  ELSE NULL 
 END) AS items_rejected
 FROM receipts
 ```
 ### Which brand has the most spEND among users who were created within the past 6 months?
 ```sql
 WITH new_users AS (
-SELECT userID
-FROM users
-WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
+  SELECT userID
+  FROM users
+  WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
 ),
 spend_by_brand AS (
     SELECT b.name, sum(totalSpent) AS spend
-FROM receipts r
-INNER JOIN new_users n
-ON r.userID = n.userID
-LEFT JOIN receipt_items ri 
-ON ri.receiptID = r.receiptID 
-LEFT JOIN brands b
-ON b.barcode = ri.barcode
-GROUP BY b.name
+  FROM receipts r
+  INNER JOIN new_users n
+  ON r.userID = n.userID
+  LEFT JOIN receipt_items ri 
+  ON ri.receiptID = r.receiptID 
+  LEFT JOIN brands b
+  ON b.barcode = ri.barcode
+  GROUP BY b.name
 )
 
 SELECT TOP name
@@ -119,20 +120,20 @@ ORDER BY spend
 ### Which brand has the most transactions among users who were created within the past 6 months?
 ```sql
 WITH new_users AS (
-SELECT userID
-FROM users
-WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
+  SELECT userID
+  FROM users
+  WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
 ),
 transactions_by_brand AS (
     SELECT b.name, COUNT( DISTINCT r.receiptID) AS transactions
-FROM receipts r
-INNER JOIN new_users n
-ON r.userID = n.userID
-LEFT JOIN receipt_items ri 
-ON ri.receiptID = r.receiptID 
-LEFT JOIN brands b
-ON b.barcode = ri.barcode
-GROUP BY b.name
+    FROM receipts r
+    INNER JOIN new_users n
+    ON r.userID = n.userID
+    LEFT JOIN receipt_items ri 
+    ON ri.receiptID = r.receiptID 
+    LEFT JOIN brands b
+    ON b.barcode = ri.barcode
+    GROUP BY b.name
 )
 
 SELECT TOP name
