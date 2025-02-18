@@ -13,7 +13,7 @@ for part 2, assuming Snowflake for DWH
 WITH most_recent_transactions_agg AS (
     SELECT 
       b.name
-    , count(distinct r.receiptID) AS cnt
+    , COUNT(DISTINCT r.receiptID) AS cnt
     FROM brands b
     LEFT JOIN receipt_items ri 
     ON b.barcode = ri.barcode
@@ -32,7 +32,7 @@ LIMIT 5
 WITH most_recent_transactions_agg AS (
     SELECT 
       b.name
-    , count(distinct r.receiptID) AS cnt
+    , COUNT(DISTINCT r.receiptID) AS cnt
     FROM brands b
     LEFT JOIN receipt_items ri 
     ON b.barcode = ri.barcode
@@ -44,7 +44,7 @@ WITH most_recent_transactions_agg AS (
 prior_month AS (
     SELECT 
       b.name
-    , count(distinct r.receiptID) AS cnt
+    , COUNT(DISTINCT r.receiptID) AS cnt
     FROM brands b
     LEFT JOIN receipt_items ri 
     ON b.barcode = ri.barcode
@@ -54,8 +54,8 @@ prior_month AS (
     GROUP BY b.name
 )
 SELECT a.name, 
-dense_rank() over (order by a.cnt desc) as current_ranking,
-dense_rank() over (order by b.cnt desc) as prior_ranking,
+dense_rank() OVER (ORDER BY a.cnt DESC) AS current_ranking,
+dense_rank() OVER (ORDER BY b.cnt DESC) AS prior_ranking,
 FROM most_recent_transactions_agg a
 LEFT JOIN prior_month b 
 ON a.name = b.name
@@ -66,18 +66,30 @@ LIMIT 5
 ### When considering average spend from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
 ```sql
 Select 
-AVG( case when rewardsReceiptStatus = “Accepted” then totalSpent else null end) as avg_accepted,
-AVG( case when rewardsReceiptStatus = “Rejected” then totalSpent else null end) as avg_rejected
+AVG( CASE 
+WHEN rewardsReceiptStatus = “Accepted” THEN totalSpent 
+ELSE NULL 
+END) AS avg_accepted,
+AVG( CASE 
+when rewardsReceiptStatus = “Rejected” THEN totalSpent 
+ELSE NULL 
+END) AS avg_rejected
 FROM receipts
 ```
 
 ### When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
 ```sql
-SUM( case when rewardsReceiptStatus = “Accepted” then purchasedItemCount else null end) AS items_accepted,
-SUM( case when rewardsReceiptStatus = “Rejected” then purchasedItemCount else null end) AS items_rejected
+SUM( CASE 
+when rewardsReceiptStatus = “Accepted” THEN purchasedItemCount 
+ELSE NULL 
+END) AS items_accepted,
+SUM( CASE 
+when rewardsReceiptStatus = “Rejected” THEN purchasedItemCount 
+ELSE NULL 
+END) AS items_rejected
 FROM receipts
 ```
-### Which brand has the most spend among users who were created within the past 6 months?
+### Which brand has the most spEND among users who were created within the past 6 months?
 ```sql
 WITH new_users AS (
 SELECT userID
@@ -85,7 +97,7 @@ FROM users
 WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
 ),
 spend_by_brand AS (
-    select b.name, sum(totalSpent) AS spend
+    SELECT b.name, sum(totalSpent) AS spend
 FROM receipts r
 INNER JOIN new_users n
 ON r.userID = n.userID
@@ -93,7 +105,7 @@ LEFT JOIN receipt_items ri
 ON ri.receiptID = r.receiptID 
 LEFT JOIN brands b
 ON b.barcode = ri.barcode
-group by b.name
+GROUP BY b.name
 )
 
 SELECT TOP name
@@ -110,7 +122,7 @@ FROM users
 WHERE createdDate > ADD_MONTHS(CURRENT_DATE(), -6)
 ),
 transactions_by_brand AS (
-    select b.name, count( distinct r.receiptID) AS transactions
+    SELECT b.name, COUNT( DISTINCT r.receiptID) AS transactions
 FROM receipts r
 INNER JOIN new_users n
 ON r.userID = n.userID
@@ -118,7 +130,7 @@ LEFT JOIN receipt_items ri
 ON ri.receiptID = r.receiptID 
 LEFT JOIN brands b
 ON b.barcode = ri.barcode
-group by b.name
+GROUP BY b.name
 )
 
 SELECT TOP name
@@ -136,7 +148,7 @@ I looked over the source data and have a few concerns.
 * Is there a maximum amount of points a user can earn in a transaction? As we can see in the attached graph, there are some pretty high outliers, earning nearly 100x what the bulk of orders earned. If there isn't we should likely include one, or have some way of stratifying rewards
 * Lastly, for nearly half of all receipts, Total Spend, Purchased Item Count, and Points Earned are missing. As we are a rewards company, this is fairly essential data if we want to be even marginally insightful with our customers. I think we need to pull the @appteam in here to better understand where the gap is. 
 
-Feel free to respond in the thread below, but this is all highly concerning
+Feel free to respond in the thread below, but this is all highly concerning, and may need to be addressed with a few cross team syncs.
 
 ![plot](./output.png)
 
